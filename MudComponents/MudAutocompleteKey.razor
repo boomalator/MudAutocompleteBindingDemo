@@ -1,0 +1,94 @@
+﻿@namespace MudBlazor
+@inherits MudAutocomplete<SelectItemInt>
+@using DefaultBlazor
+
+<div>
+    <MudAutocomplete T="SelectItemInt"
+                     @bind-Value="boundItem"
+                     @ref ="@baseMudAutoComplete"
+                     SearchFunc="@Search"
+                     Label="@Label" Variant="@Variant" HelperText="@HelperText" FullWidth="@FullWidth"
+                     Margin="@Margin" Class="@Classname" Style="@Style"
+                     ResetValueOnEmptyText="true" CoerceText="true" />
+</div>
+
+@code {
+
+    [Parameter]
+    public List<SelectItemInt> Suggestions { get; set; }
+
+    [Parameter]
+    public SelectItemInt Item
+    {
+        get => _boundItem;
+        set
+        {
+            _boundItem = value;
+        }
+    }
+
+    [Parameter]
+    public int? ItemKey
+    {
+        get => _boundItem.ID;
+        set
+        {
+            _boundItem = Suggestions.Where(x => x.ID == value).FirstOrDefault();
+        }
+    }
+
+    [Parameter]
+    public string ItemText
+    {
+        get => _boundItem.Text;
+        set
+        {
+            _boundItem = Suggestions.Where(x => x.Text == value).FirstOrDefault();
+            if (_boundItem is null)
+            {
+                _boundItem = new SelectItemInt() { ID=0, Text=value } ;
+                baseMudAutoComplete.ToggleMenu();
+            }
+        }
+    }
+
+    [Parameter]
+    public EventCallback<SelectItemInt> ItemChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<int?> ItemKeyChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<string> ItemTextChanged { get; set; }
+
+    private MudAutocomplete<SelectItemInt> baseMudAutoComplete;
+
+    // A backing field
+    private SelectItemInt _boundItem;
+
+    // A private property. This allows us to "capture" the changes made by the wrapped component.
+    private SelectItemInt boundItem
+    {
+        get => _boundItem;
+        set
+        {
+            _boundItem = value;
+            ItemChanged.InvokeAsync(value);
+            ItemKeyChanged.InvokeAsync(value?.ID ?? null);
+            ItemTextChanged.InvokeAsync(value?.Text ?? "");
+        }
+    }
+
+    private async Task<IEnumerable<SelectItemInt>> Search(string value)
+    {
+        // In real life use an asynchronous function for fetching data from an api.
+        await Task.Delay(2);
+        // if text is null or empty, show complete list
+        if (string.IsNullOrEmpty(value))
+            return Suggestions;
+        return Suggestions.Where(x => x.Text.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+    }
+
+
+
+}

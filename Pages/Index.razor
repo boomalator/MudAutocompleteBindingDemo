@@ -1,0 +1,159 @@
+﻿@page "/"
+@using DefaultBlazor
+
+
+    <MudText Typo="Typo.h4">Autocomplete Binding with a Wrapper Component</MudText>
+    <MudText Typo="Typo.h6">Demo by Boomalator (BPHynes) </MudText>
+
+<div style="background-color:antiquewhite;margin:20px;padding:5px;">
+    <MudText Typo="Typo.h6">Bound to an Object (&lt;T&gt;=SelectItemInt)</MudText>
+    <pre>   
+    myCpu1.ToString = @(myCpu1 is not null ? (myCpu1.ToString() != "" ? myCpu1.ToString() : "<Not set>") : "<Null>")
+    myCpu1.ID = @(myCpu1 is not null ? (myCpu1.ID) : "<Null>") 
+    myCpu1.Text = @(myCpu1 is not null ? (!string.IsNullOrWhiteSpace(myCpu1.Text)  ? myCpu1.Text : "<Not set>") : "<Null>")
+    
+    &nbsp;
+</pre>
+
+    <MudLink @onclick="updateCpu1">Update myCpu1 from the main page</MudLink>
+
+    <div style="width:400px;">
+        <MudAutocompleteKey Label="Cpu1 Object"
+                            Suggestions="cpus"
+                            @bind-Item="myCpu1" />
+    </div>
+
+</div>
+
+<div style="background-color:antiquewhite;margin:20px;padding:5px;">
+    <MudText Typo="Typo.h6">Bound to a string</MudText>
+<pre>   
+    myCpu2String = @(string.IsNullOrWhiteSpace(myCpu2String) ? "<Empty>" : myCpu2String)
+    &nbsp;
+</pre>
+
+    <label for="EditString" class="control-label">
+        Edit string value on main page
+    </label>
+    <input for="EditString" class="form-control" @bind="@myCpu2String" />
+
+    <div style="width:400px;">
+        <MudAutocompleteKey Label="A string"
+                            Suggestions="cpus"
+                            @bind-ItemText="@myCpu2String" />
+    </div>
+</div>
+
+<div style="background-color:antiquewhite;margin:20px;padding:5px;">
+    <MudText Typo="Typo.h6">Bound to an int (key/ID) [inside a model object]</MudText>
+<pre>
+    myAsset.ToString = @myAsset.ToString() 
+    myAsset.AssetID = @myAsset.AssetID 
+    myAsset.AssetDescription = @myAsset.AssetDescription 
+    myAsset.CpuID = @myAsset.CpuID
+    &nbsp;
+</pre>
+
+    <label for="EditInt" class="control-label">
+        Edit int value on main page
+    </label>
+    <input for="EditInt" class="form-control" @bind="@myAsset.CpuID" />
+
+    <div class="form-group">
+        <label for="Cpu" class="control-label">
+            Change int value with SELECT on main page
+        </label>
+
+        <select for="Cpu" class="form-control" @bind="@myAsset.CpuID">
+            <option value=0 selected>[Select CPU Type]</option>
+            @foreach (var cpu in cpus)
+            {
+                <option value="@cpu.ID">
+                    @cpu.Text
+                </option>
+            }
+        </select>
+    </div>
+
+
+
+
+    <div style="width:400px;">
+        <MudAutocompleteKey Label="Bound to an integer key"
+                            Suggestions="cpus"
+                            @bind-ItemKey="@myAsset.CpuID" />
+    </div>
+</div>
+
+
+@code {
+
+    public class Asset
+    {
+        public string AssetID { get; set; }
+        public string AssetDescription { get; set; }
+        public int? CpuID { get; set; }
+        public override string ToString()
+        {
+            return $"{AssetID}: {AssetDescription}".Trim();
+        }
+    }
+
+    private SelectItemInt bound2;
+
+    private Asset myAsset = new Asset { AssetID = "00001", AssetDescription = "Test Asset #1", CpuID = 1 };
+
+    private List<SelectItemInt> cpus = new List<SelectItemInt>()
+{
+        new SelectItemInt {ID = 1, Text = "Intel Celeron 1.80GHz"},
+        new SelectItemInt {ID = 2, Text = "AMD Ryzen Threadripper PRO 3995WX"},
+        new SelectItemInt {ID = 3, Text = "HamsterWheel 98"}
+    };
+
+    private SelectItemInt myCpu1 = new SelectItemInt();
+
+    private int myKey;
+    private string myCpu2String = "Intel Celeron 1.80GHz";
+
+    private void updateCpu1()
+    {
+        int next = 0;
+        if (myCpu1 is not null)
+        {
+            next = myCpu1.ID;
+            if (next >= cpus.Count) next = 0;
+        }
+        { myCpu1 = cpus[next]; }
+    }
+
+
+    private void update1()
+    {
+        myCpu1 = new SelectItemInt();
+        myCpu1.ID = myAsset.CpuID ?? 0;
+        myCpu1.Text = cpus.Where(x => x.ID == myCpu1.ID).FirstOrDefault().Text;
+    }
+
+    private void update2()
+    {
+        myAsset.CpuID = (myCpu1?.ID ?? null);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Delay(2);
+        myCpu2String = "Intel Celeron 1.80GHz";
+    }
+
+
+    private async Task<IEnumerable<SelectItemInt>> Search2(string value)
+    {
+        // In real life use an asynchronous function for fetching data from an api.
+        await Task.Delay(2);
+        // if text is null or empty, show complete list
+        if (string.IsNullOrEmpty(value))
+            return cpus;
+        return cpus.Where(x => x.Text.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+    }
+
+}
