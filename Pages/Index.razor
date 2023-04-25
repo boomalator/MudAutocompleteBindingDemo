@@ -6,10 +6,10 @@
     <MudText Typo="Typo.h6">Demo by Boomalator (BPHynes) </MudText>
 
 <div style="background-color:antiquewhite;margin:20px;padding:5px;">
-    <MudText Typo="Typo.h6">Bound to an Object (&lt;T&gt;=SelectItemInt)</MudText>
+    <MudText Typo="Typo.h6">Bound to an Object (&lt;T&gt;=SelectItem&lt;int&gt;)</MudText>
     <pre>   
     myCpu1.ToString = @(myCpu1 is not null ? (myCpu1.ToString() != "" ? myCpu1.ToString() : "<Not set>") : "<Null>")
-    myCpu1.ID = @(myCpu1 is not null ? (myCpu1.ID) : "<Null>") 
+    myCpu1.ID = @(myCpu1 is not null ? (myCpu1.Id) : "<Null>") 
     myCpu1.Text = @(myCpu1 is not null ? (!string.IsNullOrWhiteSpace(myCpu1.Text)  ? myCpu1.Text : "<Not set>") : "<Null>")
     
     &nbsp;
@@ -18,7 +18,8 @@
     <MudLink @onclick="updateCpu1">Update myCpu1 from the main page</MudLink>
 
     <div style="width:400px;">
-        <MudAutocompleteKey Label="Cpu1 Object"
+        <MudAutocompleteKey T="int?"
+                            Label="Cpu1 Object"
                             Suggestions="cpus"
                             @bind-Item="myCpu1" />
     </div>
@@ -38,7 +39,8 @@
     <input for="EditString" class="form-control" @bind="@myCpu2String" />
 
     <div style="width:400px;">
-        <MudAutocompleteKey Label="A string"
+        <MudAutocompleteKey T="int?" 
+                            Label="A string"
                             Suggestions="cpus"
                             @bind-ItemText="@myCpu2String" />
     </div>
@@ -68,7 +70,7 @@
             <option value=0 selected>[Select CPU Type]</option>
             @foreach (var cpu in cpus)
             {
-                <option value="@cpu.ID">
+                <option value="@cpu.Id">
                     @cpu.Text
                 </option>
             }
@@ -79,7 +81,8 @@
 
 
     <div style="width:400px;">
-        <MudAutocompleteKey Label="Bound to an integer key"
+        <MudAutocompleteKey T="int?"
+                            Label="Bound to an integer key"
                             Suggestions="cpus"
                             @bind-ItemKey="@myAsset.CpuID" />
     </div>
@@ -99,18 +102,18 @@
         }
     }
 
-    private SelectItemInt bound2;
+    private SelectItem<int> bound2;
 
     private Asset myAsset = new Asset { AssetID = "00001", AssetDescription = "Test Asset #1", CpuID = 1 };
 
-    private List<SelectItemInt> cpus = new List<SelectItemInt>()
+    private List<SelectItem<int?>> cpus = new List<SelectItem<int?>>()
 {
-        new SelectItemInt {ID = 1, Text = "Intel Celeron 1.80GHz"},
-        new SelectItemInt {ID = 2, Text = "AMD Ryzen Threadripper PRO 3995WX"},
-        new SelectItemInt {ID = 3, Text = "HamsterWheel 98"}
+        new SelectItem<int?> {Id = 1, Text = "Intel Celeron 1.80GHz"},
+        new SelectItem<int?> {Id = 2, Text = "AMD Ryzen Threadripper PRO 3995WX"},
+        new SelectItem<int?> {Id = 3, Text = "HamsterWheel 98"}
     };
 
-    private SelectItemInt myCpu1 = new SelectItemInt();
+    private SelectItem<int?> myCpu1 = new SelectItem<int?>();
 
     private int myKey;
     private string myCpu2String = "Intel Celeron 1.80GHz";
@@ -120,7 +123,7 @@
         int next = 0;
         if (myCpu1 is not null)
         {
-            next = myCpu1.ID;
+            next = myCpu1.Id ?? 0;
             if (next >= cpus.Count) next = 0;
         }
         { myCpu1 = cpus[next]; }
@@ -129,14 +132,14 @@
 
     private void update1()
     {
-        myCpu1 = new SelectItemInt();
-        myCpu1.ID = myAsset.CpuID ?? 0;
-        myCpu1.Text = cpus.Where(x => x.ID == myCpu1.ID).FirstOrDefault().Text;
+        myCpu1 = new SelectItem<int?>();
+        myCpu1.Id = myAsset.CpuID ?? 0;
+        myCpu1.Text = cpus.Where(x => x.Id == myCpu1.Id).FirstOrDefault().Text;
     }
 
     private void update2()
     {
-        myAsset.CpuID = (myCpu1?.ID ?? null);
+        myAsset.CpuID = (myCpu1?.Id ?? null);
     }
 
     protected override async Task OnInitializedAsync()
@@ -146,7 +149,7 @@
     }
 
 
-    private async Task<IEnumerable<SelectItemInt>> Search2(string value)
+    private async Task<IEnumerable<SelectItem<int?>>> Search2(string value)
     {
         // In real life use an asynchronous function for fetching data from an api.
         await Task.Delay(2);
