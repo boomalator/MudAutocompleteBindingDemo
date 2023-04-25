@@ -1,94 +1,141 @@
 ﻿@namespace MudBlazor
-@inherits MudAutocomplete<SelectItemInt>
+@typeparam T
+@inherits MudAutocomplete<SelectItem<T>>
 @using DefaultBlazor
 
 <div>
-    <MudAutocomplete T="SelectItemInt"
+    <MudAutocomplete T="SelectItem<T>"
                      @bind-Value="boundItem"
                      @ref ="@baseMudAutoComplete"
                      SearchFunc="@Search"
-                     Label="@Label" Variant="@Variant" HelperText="@HelperText" FullWidth="@FullWidth"
-                     Margin="@Margin" Class="@Classname" Style="@Style"
-                     ResetValueOnEmptyText="true" CoerceText="true" />
+                     Label="@Label" 
+                     Variant="@Variant"
+                     HelperText="@HelperText"
+                     FullWidth="@FullWidth"
+                     Margin="@Margin" 
+                     Class="@Classname" 
+                     Style="@Style"
+                     ResetValueOnEmptyText="true" 
+                     CoerceText="true" />
 </div>
 
 @code {
 
+    #nullable enable
+    
+    /// <summary>
+    /// Gets or sets the suggestions.
+    /// </summary>
+    /// <value>The suggestions.</value>
     [Parameter]
-    public List<SelectItemInt> Suggestions { get; set; }
+    public List<SelectItem<T>> Suggestions { get; set; } = new List<SelectItem<T>>();
 
+    /// <summary>
+    /// Gets or sets the item.
+    /// </summary>
+    /// <value>The item.</value>
     [Parameter]
-    public SelectItemInt Item
+    public SelectItem<T> Item
     {
         get => _boundItem;
-        set
-        {
-            _boundItem = value;
-        }
+        set => _boundItem = value;
     }
 
     [Parameter]
-    public int? ItemKey
+    public T? ItemKey
     {
-        get => _boundItem.ID;
-        set
-        {
-            _boundItem = Suggestions.Where(x => x.ID == value).FirstOrDefault();
-        }
+        get => _boundItem.Id;
+#pragma warning disable CS8601 // Possible null reference assignment.
+        set => _boundItem = Suggestions.FirstOrDefault(x => x.Id?.Equals(value) ?? false);
+#pragma warning restore CS8601 // Possible null reference assignment.
     }
 
+    /// <summary>
+    /// Gets or sets the item text.
+    /// </summary>
+    /// <value>The item text.</value>
     [Parameter]
-    public string ItemText
+    public string? ItemText
     {
-        get => _boundItem.Text;
+        get => _boundItem?.Text ?? null;
         set
         {
-            _boundItem = Suggestions.Where(x => x.Text == value).FirstOrDefault();
+#pragma warning disable CS8601 // Possible null reference assignment.
+                    _boundItem = Suggestions.FirstOrDefault(x => x.Text == value);
+#pragma warning restore CS8601 // Possible null reference assignment.
             if (_boundItem is null)
             {
-                _boundItem = new SelectItemInt() { ID=0, Text=value } ;
+                _boundItem = new SelectItem<T>() { Id = default, Text = value };
                 baseMudAutoComplete.ToggleMenu();
             }
         }
     }
 
+    /// <summary>
+    /// Gets or sets the item changed.
+    /// </summary>
+    /// <value>The item changed.</value>
     [Parameter]
-    public EventCallback<SelectItemInt> ItemChanged { get; set; }
+    public EventCallback<SelectItem<T>> ItemChanged { get; set; }
 
+    /// <summary>
+    /// Gets or sets the item key changed.
+    /// </summary>
+    /// <value>The item key changed.</value>
     [Parameter]
-    public EventCallback<int?> ItemKeyChanged { get; set; }
+    public EventCallback<T?> ItemKeyChanged { get; set; }
 
+    /// <summary>
+    /// Gets or sets the item text changed.
+    /// </summary>
+    /// <value>The item text changed.</value>
     [Parameter]
     public EventCallback<string> ItemTextChanged { get; set; }
 
-    private MudAutocomplete<SelectItemInt> baseMudAutoComplete;
+    private MudAutocomplete<SelectItem<T>> baseMudAutoComplete;
 
     // A backing field
-    private SelectItemInt _boundItem;
+    private SelectItem<T> _boundItem;
 
     // A private property. This allows us to "capture" the changes made by the wrapped component.
-    private SelectItemInt boundItem
+    private SelectItem<T> boundItem
     {
         get => _boundItem;
         set
         {
             _boundItem = value;
-            ItemChanged.InvokeAsync(value);
-            ItemKeyChanged.InvokeAsync(value?.ID ?? null);
-            ItemTextChanged.InvokeAsync(value?.Text ?? "");
+
+            if (value != null)
+            {
+                ItemChanged.InvokeAsync(value);
+                ItemKeyChanged.InvokeAsync(value.Id);
+                ItemTextChanged.InvokeAsync(value.Text);
+            }
+            else
+            {
+                ItemChanged.InvokeAsync(null);
+                ItemKeyChanged.InvokeAsync(default(T));
+                ItemTextChanged.InvokeAsync(null);
+            }
         }
     }
 
-    private async Task<IEnumerable<SelectItemInt>> Search(string value)
+    /// <summary>
+    /// Searches the specified value.
+    /// </summary>
+    /// <param name="value">The value.</param>
+    /// <returns>IEnumerable&lt;SelectItem&lt;T&gt;&gt;.</returns>
+    private async Task<IEnumerable<SelectItem<T>>> Search(string value)
     {
-        // In real life use an asynchronous function for fetching data from an api.
-        await Task.Delay(2);
         // if text is null or empty, show complete list
         if (string.IsNullOrEmpty(value))
+        {
             return Suggestions;
-        return Suggestions.Where(x => x.Text.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+        }
+        await Task.FromResult(true);
+        return Suggestions.Where(x => x.ToString().Contains(value, StringComparison.InvariantCultureIgnoreCase));
     }
 
-
+    #nullable disable
 
 }
